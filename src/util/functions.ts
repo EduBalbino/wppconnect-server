@@ -227,7 +227,11 @@ export async function autoDownload(client: any, req: any, message: any) {
           })
         );
 
-        message.fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
+        if (config?.aws_s3?.endpoint) {
+          message.fileUrl = `${config.aws_s3.endpoint}/${bucketName}/${fileName}`;
+        } else {
+          message.fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
+        }
       } else {
         message.body = await buffer.toString('base64');
       }
