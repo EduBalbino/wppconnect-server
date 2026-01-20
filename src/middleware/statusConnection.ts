@@ -25,6 +25,8 @@ export default async function statusConnection(
 ) {
   try {
     const numbers: any = [];
+    console.log('[statusConnection] session', req.session);
+    console.log('[statusConnection] body', req.body);
     if (req.client && req.client.isConnected) {
       await req.client.isConnected();
 
@@ -34,15 +36,20 @@ export default async function statusConnection(
         req.body.isNewsletter,
         req.body.isLid
       );
+      console.log('[statusConnection] localArr', localArr);
       let index = 0;
       for (const contact of localArr) {
         if (req.body.isGroup || req.body.isNewsletter) {
           localArr[index] = contact;
         } else if (numbers.indexOf(contact) < 0) {
-          console.log(contact);
+          console.log('[statusConnection] checking contact', contact);
           const profile: any = await req.client
             .checkNumberStatus(contact)
-            .catch((error) => console.log(error));
+            .catch((error) => {
+              console.log('[statusConnection] checkNumberStatus error', error);
+              return undefined;
+            });
+          console.log('[statusConnection] profile', profile);
           if (!profile?.numberExists) {
             const num = (contact as any).split('@')[0];
             res.status(400).json({
@@ -51,6 +58,12 @@ export default async function statusConnection(
               message: `O número ${num} não existe.`,
             });
           } else {
+            if (!profile?.id?._serialized) {
+              console.log('[statusConnection] missing profile.id._serialized', {
+                contact,
+                profile,
+              });
+            }
             if ((numbers as any).indexOf(profile.id._serialized) < 0) {
               (numbers as any).push(profile.id._serialized);
             }
